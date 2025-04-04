@@ -1,9 +1,11 @@
+//controllers/authController.js
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 // Registro
 exports.register = async (req, res) => {
-  const { nombre, email, password } = req.body;
+  const { nombre, email, password, role = 'user' } = req.body;
 
   try {
     const userExist = await User.findOne({ email });
@@ -11,7 +13,7 @@ exports.register = async (req, res) => {
       return res.status(400).json({ message: 'El email ya está registrado.' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ nombre, email, password: hashedPassword });
+    const newUser = new User({ nombre, email, password: hashedPassword, role });
 
     await newUser.save();
 
@@ -34,42 +36,20 @@ exports.login = async (req, res) => {
     if (!isValid)
       return res.status(401).json({ message: 'Contraseña incorrecta.' });
 
-    res.json({ message: 'Login exitoso.', email: user.email, nombre: user.nombre });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-// ✅ Obtener perfil por email
-exports.getProfile = async (req, res) => {
-  const { email } = req.query;
-
-  try {
-    const user = await User.findOne({ email });
-    if (!user)
-      return res.status(404).json({ message: 'Usuario no encontrado.' });
-
-    res.json({ nombre: user.nombre, email: user.email });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-// ✅ Actualizar nombre del perfil
-exports.updateProfile = async (req, res) => {
-  const { email, nombre } = req.body;
-
-  try {
-    const user = await User.findOneAndUpdate(
-      { email },
-      { nombre },
-      { new: true }
+    // Generar token
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '2h' }
     );
 
-    if (!user)
-      return res.status(404).json({ message: 'Usuario no encontrado.' });
-
-    res.json({ message: 'Nombre actualizado exitosamente.', nombre: user.nombre });
+    res.json({
+      message: 'Login exitoso.',
+      token,
+      email: user.email,
+      nombre: user.nombre,
+      role: user.role,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
