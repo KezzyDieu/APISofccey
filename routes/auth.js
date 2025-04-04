@@ -1,4 +1,4 @@
-//routes/auth.js
+// routes/auth.js
 const express = require('express');
 const router = express.Router();
 const {
@@ -10,7 +10,7 @@ const {
 
 router.post('/register', register);
 router.post('/login', login);
-router.get('/profile', getProfile);       // ✅ Nuevo: obtener perfil
-router.put('/profile', updateProfile);    // ✅ Nuevo: actualizar nombre
+router.get('/profile', getProfile);
+router.put('/profile', updateProfile);
 
 module.exports = router;

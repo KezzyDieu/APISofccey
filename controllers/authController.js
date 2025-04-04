@@ -1,9 +1,8 @@
-//controllers/authController.js
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// Registro
+// ✅ Registro
 exports.register = async (req, res) => {
   const { nombre, email, password, role = 'user' } = req.body;
 
@@ -23,7 +22,7 @@ exports.register = async (req, res) => {
   }
 };
 
-// Login
+// ✅ Login
 exports.login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -50,6 +49,41 @@ exports.login = async (req, res) => {
       nombre: user.nombre,
       role: user.role,
     });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ✅ Obtener perfil
+exports.getProfile = async (req, res) => {
+  const { email } = req.query;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user)
+      return res.status(404).json({ message: 'Usuario no encontrado.' });
+
+    res.json({ nombre: user.nombre, email: user.email, role: user.role });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ✅ Actualizar nombre
+exports.updateProfile = async (req, res) => {
+  const { email, nombre } = req.body;
+
+  try {
+    const user = await User.findOneAndUpdate(
+      { email },
+      { nombre },
+      { new: true }
+    );
+
+    if (!user)
+      return res.status(404).json({ message: 'Usuario no encontrado.' });
+
+    res.json({ message: 'Nombre actualizado exitosamente.', nombre: user.nombre });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
